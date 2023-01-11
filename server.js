@@ -1,6 +1,8 @@
 const http = require('http');
 const app = require('./app');
 
+
+//Configuration du port du serveur
 const normalizePort = val => {
     const port = parseInt(val, 10);
     if (isNaN(port)) {
@@ -14,6 +16,8 @@ const normalizePort = val => {
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
+
+//Gestion des erreurs
 const errorHandler = error => {
     if (error.syscall !== 'listen') {
         throw error;

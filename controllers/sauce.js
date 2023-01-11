@@ -6,13 +6,6 @@ function getSauceById(req, res) {
     return Sauce.findOne({ _id: req.params.id })
 }
 
-//Récupération de la réponse du serveur
-function returnClientResponse(sauce, res) {
-    if (sauce == null) {
-        return res.status(404).json({ message: "Sauce non trouvée dans la base de données"})
-    }
-    return Promise.resolve(res.status(200).json(sauce)).then(() => sauce);
-}
 
 //Suppression de l'image existante en cas de modification d'image ou de suppression de la sauce
 function deleteImage(sauce, req, res) {
@@ -22,21 +15,24 @@ function deleteImage(sauce, req, res) {
     }));
 }
 
-//Afficher toutes les sauces
+
+//Affichage de toutes les sauces
 exports.getAllSauces = (req, res) => {
     Sauce.find()
         .then(sauces => res.status(200).json(sauces))
         .catch(error => res.status(400).json({ error }));
 };
 
-//Afficher la sauce sélectionnée
+
+//Affichage de la sauce sélectionnée
 exports.getOneSauce = (req, res) => {
     getSauceById(req, res)
         .then(sauce => res.status(200).json(sauce))
         .catch(error => res.status(500).json({ error }));
 };
 
-//Créer une sauce
+
+//Création d'une sauce
 exports.createSauce = (req, res) => {
     const sauceObject = JSON.parse(req.body.sauce);
     delete sauceObject._id;
@@ -55,7 +51,8 @@ exports.createSauce = (req, res) => {
         .catch(error => res.status(400).json({ error }));
 };
 
-//Modifier une sauce
+
+//Modification d'une sauce
 exports.modifySauce = (req, res) => {
     const sauceObject = req.file ? {
         ...JSON.parse(req.body.sauce),
@@ -68,7 +65,9 @@ exports.modifySauce = (req, res) => {
             if (sauce.userId !== req.auth.userId) {
                 res.status(403).json({ message: "Non autorisé !" });
             } else {
-                if (req.file.filename !== sauce.imageUrl.split('/images/')[1]) {
+                const imageSauce = sauce.imageUrl.split('/images/')[1];
+                //Si modification de l'image, suppression de l'image précédente
+                if (req.file && req.file.filename !== imageSauce) {
                     deleteImage(sauce, req, res);
                 }
                 Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
@@ -79,7 +78,8 @@ exports.modifySauce = (req, res) => {
         .catch(error => res.status(400).json({ error }));
 };
 
-//Supprimer une sauce
+
+//Suppression d'une sauce
 exports.deleteSauce = (req, res) => {
     getSauceById(req, res)
         .then((sauce) => {
@@ -95,6 +95,7 @@ exports.deleteSauce = (req, res) => {
         .catch(error => res.status(500).json({ error }));
 };
 
+
 //Fonction pour les likes - dislikes
 exports.likeSauce = (req, res) => {
     const {userId, like} = req.body;
@@ -102,27 +103,34 @@ exports.likeSauce = (req, res) => {
     getSauceById(req, res)
         .then((sauce) => updateVote(sauce, like, userId))
         .then(saveSauce => saveSauce.save())
-        .then(sauce => returnClientResponse(sauce, res))
+        .then(sauce => res.status(200).json(sauce))
         .catch(error => res.status(500).json({ error }));
 };
 
+//Mise à jour du vote Like/Dislike
 function updateVote(sauce, like, userId, res) {
     if (like === 1 || like === -1) return incrementeVote(sauce, userId, like);
     return resetVote(sauce, userId, res);
 }
 
+//Ajout du vote
 function incrementeVote(sauce, userId, like) {
+    //Récupération des tableaux usersLiked et usersDisliked
     const { usersLiked, usersDisliked } = sauce;
 
+    //Ajout de l'id utilisateur dans le tableau correspondant
     const votersArray = like === 1 ? usersLiked : usersDisliked;
     if (votersArray.includes(userId)) return sauce;
     votersArray.push(userId);
 
+    //Incrémentation du compteur Like ou Dislike correspondant
     like === 1 ? ++sauce.likes : ++sauce.dislikes;
     return sauce;
 }
 
+//Annulation du vote
 function resetVote(sauce, userId, res) {
+    //Récupération des tableaux usersLiked et usersDisliked
     const { usersLiked, usersDisliked } = sauce;
 
     //Message d'erreur si l'utilisateur peut liker ET disliker

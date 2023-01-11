@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+
+//Données de la sauce à envoyer au serveur
 const sauceSchema = new mongoose.Schema({
     userId: { type: String, required: true }, // id MongoDB de l'utilisateur qui a créé la sauce
     name : { type: String, required: true }, // Nom de la sauce
@@ -13,5 +15,6 @@ const sauceSchema = new mongoose.Schema({
     usersLiked : [ "String <userId>" ], // Tableau des ids des utilisateurs qui ont aimé (= liked) la sauce
     usersDisliked : [ "String <userId>" ] // Tableau des ids des utilisateurs qui n'ont pas aimé (= disliked) la sauce
 });
+
 
 module.exports = mongoose.model('Sauce', sauceSchema);

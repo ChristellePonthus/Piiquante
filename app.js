@@ -18,11 +18,15 @@ mongoose
     .then(() => console.log('Connexion à MongoDB réussie !'))
     .catch(() => console.log('Connexion à MongoDB échouée !'));
 
+
+//Appel du framework Express
 const app = express();
 
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
+
+//Configuration des headers pour les requêtes
 app.use((req, res, next) => {
    res.setHeader('Access-Control-Allow-Origin', '*');
    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
@@ -31,7 +35,9 @@ app.use((req, res, next) => {
 });
 
 
+//Configuration des routes communes
 app.use('/api/sauces', sauceRoutes);
 app.use('/api/auth', userRoutes);
+
 
 module.exports = app;
